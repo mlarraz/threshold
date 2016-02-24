@@ -162,7 +162,7 @@ func CreateClient() *github.Client {
 		baseURL, err := url.Parse(Host)
 
 		if err != nil {
-			// TODO: handle error
+			log.Fatalf("Error parsing host %s: %s", Host, err)
 		}
 
 		client.BaseURL = baseURL
