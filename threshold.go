@@ -29,19 +29,22 @@ var (
 func Handler(w http.ResponseWriter, r *http.Request) {
 	var webhook github.PullRequestEvent
 	var res string
+	var code int
 
 	err := json.NewDecoder(r.Body).Decode(&webhook)
 	if err != nil {
 		res = fmt.Sprintf("Problem decoding webhook payload: %s", err)
+		code = http.StatusBadRequest
 
-		log.Println(res)
-		w.Write([]byte(res))
-		w.WriteHeader(http.StatusBadRequest)
+		HandleResponse(w, res, code)
 		return
 	}
 
 	if *webhook.Action == "closed" {
-		// TODO
+		res = "Invalid PR action. Ignoring."
+		code = http.StatusOK
+
+		HandleResponse(w, res, code)
 		return
 	}
 
@@ -56,12 +59,14 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		// Add a passing status
 		status, err := CreateStatus(pr, "success")
 		if err != nil {
+			res = fmt.Sprintf("%s", err)
+			code = http.StatusInternalServerError
+		} else {
+			res = fmt.Sprintf("Successfully posted status at: %s", *status.URL)
+			code = http.StatusOK
 		}
 
-		res = fmt.Sprintf("Successfully posted status at: %s", *status.URL)
-		log.Println(res)
-		w.Write([]byte(res))
-		w.WriteHeader(http.StatusOK)
+		HandleResponse(w, res, code)
 		return
 	}
 
@@ -77,7 +82,11 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	// Post a comment
 	_, _, err = Client.Issues.CreateComment(*owner, *repo, *num, &comment)
 	if err != nil {
-		// TODO
+		res = fmt.Sprintf("Error posting a comment: %s", err)
+		code = http.StatusInternalServerError
+
+		HandleResponse(w, res, code)
+		return
 	}
 
 	if Strict {
@@ -85,19 +94,32 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		*pr.State = "closed"
 		_, _, err = Client.PullRequests.Edit(*owner, *repo, *num, pr)
 		if err != nil {
-			// TODO
+			res = fmt.Sprintf("Error closing PR: %s", err)
+			code = http.StatusInternalServerError
+		} else {
+			res = fmt.Sprintf("Closed PR at: %s", *pr.URL)
+			code = http.StatusOK
 		}
 	} else {
 		// Add a failing status
 		status, err := CreateStatus(pr, "failure")
 		if err != nil {
+			res = fmt.Sprintf("Error updating status: %s", err)
+			code = http.StatusInternalServerError
+		} else {
+			res = fmt.Sprintf("Successfully posted status at: %s", *status.URL)
+			code = http.StatusOK
 		}
-		res = fmt.Sprintf("Successfully posted status at: %s", *status.URL)
-		log.Println(res)
 	}
 
-	w.Write([]byte(res))
-	w.WriteHeader(http.StatusOK)
+	HandleResponse(w, res, code)
+}
+
+func HandleResponse(w http.ResponseWriter, body string, code int) {
+	log.Println(body)
+
+	w.Write([]byte(body))
+	w.WriteHeader(code)
 }
 
 func CreateStatus(pr *github.PullRequest, s string) (*github.RepoStatus, error) {
