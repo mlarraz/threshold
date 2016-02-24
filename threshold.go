@@ -51,7 +51,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	pr := webhook.PullRequest
 	errs := Evaluate(pr)
 
-	owner := webhook.Repo.Owner.Name
+	owner := webhook.Repo.Owner.Login
 	repo := webhook.Repo.Name
 	num := webhook.Number
 
@@ -125,15 +125,19 @@ func CreateStatus(pr *github.PullRequest, s string) (*github.RepoStatus, error) 
 		return nil, err
 	}
 
-	status := github.RepoStatus{}
-	*status.State = s
-	*status.Description = "Complexity thresholds"
-	*status.Context = "ci/threshold"
+	desc := "Complexity thresholds"
+	context := "ci/threshold"
+
+	status := &github.RepoStatus{
+		State:       &s,
+		Description: &desc,
+		Context:     &context,
+	}
 
 	owner := pr.Base.User.Name
 	repo := pr.Base.Repo.Name
 
-	res, _, err := Client.Repositories.CreateStatus(*owner, *repo, *pr.Head.SHA, &status)
+	res, _, err := Client.Repositories.CreateStatus(*owner, *repo, *pr.Head.SHA, status)
 	return res, err
 }
 
