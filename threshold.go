@@ -31,12 +31,13 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	var res string
 	var code int
 
+	defer HandleResponse(w, res, code)
+
 	err := json.NewDecoder(r.Body).Decode(&webhook)
 	if err != nil {
 		res = fmt.Sprintf("Problem decoding webhook payload: %s", err)
 		code = http.StatusBadRequest
 
-		HandleResponse(w, res, code)
 		return
 	}
 
@@ -44,7 +45,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		res = "Invalid PR action. Ignoring."
 		code = http.StatusOK
 
-		HandleResponse(w, res, code)
 		return
 	}
 
@@ -66,7 +66,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 			code = http.StatusOK
 		}
 
-		HandleResponse(w, res, code)
 		return
 	}
 
@@ -85,7 +84,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		res = fmt.Sprintf("Error posting a comment: %s", err)
 		code = http.StatusInternalServerError
 
-		HandleResponse(w, res, code)
 		return
 	}
 
@@ -111,8 +109,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 			code = http.StatusOK
 		}
 	}
-
-	HandleResponse(w, res, code)
 }
 
 func HandleResponse(w http.ResponseWriter, body string, code int) {
