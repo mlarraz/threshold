@@ -3,7 +3,6 @@ package threshold
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -28,18 +27,9 @@ var (
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		res := fmt.Sprintf("Problem reading request body: %s", err)
-		log.Println(res)
-		w.Write([]byte(res))
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
 	var webhook github.PullRequestEvent
 
-	err = json.Unmarshal(body, &webhook)
+	err := json.NewDecoder(r.Body).Decode(&webhook)
 	if err != nil {
 		res := fmt.Sprintf("Problem decoding webhook payload: %s", err)
 		log.Println(res)
