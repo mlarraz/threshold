@@ -58,7 +58,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 		}
 
-		res = fmt.Sprintf("Successfully posted status at: %s", status.URL)
+		res = fmt.Sprintf("Successfully posted status at: %s", *status.URL)
 		log.Println(res)
 		w.Write([]byte(res))
 		w.WriteHeader(http.StatusOK)
@@ -92,7 +92,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		status, err := CreateStatus(pr, "failure")
 		if err != nil {
 		}
-		res = fmt.Sprintf("Successfully posted status at: %s", status.URL)
+		res = fmt.Sprintf("Successfully posted status at: %s", *status.URL)
 		log.Println(res)
 	}
 
@@ -121,7 +121,7 @@ func CreateStatus(pr *github.PullRequest, s string) (*github.RepoStatus, error) 
 
 func Evaluate(pr *github.PullRequest) (errors []string) {
 	if MaxFiles != 0 && *pr.ChangedFiles > MaxFiles {
-		msg := fmt.Sprintf("%s files were changed, but the threshold is %s", *pr.ChangedFiles, MaxFiles)
+		msg := fmt.Sprintf("%d files were changed, but the threshold is %d", *pr.ChangedFiles, MaxFiles)
 		errors = append(errors, msg)
 	}
 
