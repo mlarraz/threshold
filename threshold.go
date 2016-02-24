@@ -28,10 +28,12 @@ var (
 
 func Handler(w http.ResponseWriter, r *http.Request) {
 	var webhook github.PullRequestEvent
+	var res string
 
 	err := json.NewDecoder(r.Body).Decode(&webhook)
 	if err != nil {
-		res := fmt.Sprintf("Problem decoding webhook payload: %s", err)
+		res = fmt.Sprintf("Problem decoding webhook payload: %s", err)
+
 		log.Println(res)
 		w.Write([]byte(res))
 		w.WriteHeader(http.StatusBadRequest)
@@ -56,7 +58,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 		}
 
-		res := fmt.Sprintf("Successfully posted status at: %s", status.URL)
+		res = fmt.Sprintf("Successfully posted status at: %s", status.URL)
 		log.Println(res)
 		w.Write([]byte(res))
 		w.WriteHeader(http.StatusOK)
@@ -77,8 +79,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// TODO
 	}
-
-	var res string
 
 	if Strict {
 		// Close the PR
