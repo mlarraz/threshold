@@ -52,15 +52,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	if len(errors) == 0 {
 		// Add a passing status
-		status := github.RepoStatus{}
-		*status.State = "success"
-		*status.Description = "Complexity thresholds"
-		*status.Context = "ci/threshold"
-
-		_, _, err = Client.Repositories.CreateStatus(*owner, *repo, *pr.Head.SHA, &status)
-		if err != nil {
-			// TODO
-		}
+		CreateStatus(pr, "success")
 
 		w.WriteHeader(http.StatusOK)
 		return
@@ -90,19 +82,30 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		// Add a failing status
-		status := github.RepoStatus{}
-		*status.State = "failure"
-		*status.Description = "Complexity thresholds"
-		*status.Context = "ci/threshold"
-
-		_, _, err = Client.Repositories.CreateStatus(*owner, *repo, *pr.Head.SHA, &status)
-		if err != nil {
-			// TODO
-		}
+		CreateStatus(pr, "failure")
 	}
 
 	w.Write([]byte("Something"))
 	w.WriteHeader(http.StatusOK)
+}
+
+func CreateStatus(pr *github.PullRequest, s string) {
+	if s != "failure" && s != "passing" {
+		// Handle invalid state
+	}
+
+	status := github.RepoStatus{}
+	*status.State = s
+	*status.Description = "Complexity thresholds"
+	*status.Context = "ci/threshold"
+
+	owner := pr.Base.User.Name
+	repo := pr.Base.Repo.Name
+
+	_, _, err := Client.Repositories.CreateStatus(*owner, *repo, *pr.Head.SHA, &status)
+	if err != nil {
+		// TODO
+	}
 }
 
 func Evaluate(pr *github.PullRequest) (errors []string) {
