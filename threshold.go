@@ -46,13 +46,13 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pr := webhook.PullRequest
-	errors := Evaluate(pr)
+	errs := Evaluate(pr)
 
 	owner := webhook.Repo.Owner.Name
 	repo := webhook.Repo.Name
 	num := webhook.Number
 
-	if len(errors) == 0 {
+	if len(errs) == 0 {
 		// Add a passing status
 		status, err := CreateStatus(pr, "success")
 		if err != nil {
@@ -66,7 +66,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	b := "This PR has been judged to be too complex for the following reasons:\n\n" +
-		strings.Join(errors, "\n") +
+		strings.Join(errs, "\n") +
 		"\nPlease consider breaking these changes up in to smaller pieces."
 
 	comment := github.IssueComment{Body: &b}
@@ -119,13 +119,13 @@ func CreateStatus(pr *github.PullRequest, s string) (*github.RepoStatus, error) 
 	return res, err
 }
 
-func Evaluate(pr *github.PullRequest) (errors []string) {
+func Evaluate(pr *github.PullRequest) (errs []string) {
 	if MaxFiles != 0 && *pr.ChangedFiles > MaxFiles {
 		msg := fmt.Sprintf("%d files were changed, but the threshold is %d", *pr.ChangedFiles, MaxFiles)
-		errors = append(errors, msg)
+		errs = append(errs, msg)
 	}
 
-	return errors
+	return errs
 }
 
 func CreateClient() *github.Client {
