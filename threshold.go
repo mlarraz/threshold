@@ -41,7 +41,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if *webhook.Action == "closed" {
+	if webhook.Action == nil || *webhook.Action == "closed" {
 		res = "Invalid PR action. Ignoring."
 		code = http.StatusOK
 
