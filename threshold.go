@@ -46,15 +46,25 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	pr := webhook.PullRequest
 	errors := Evaluate(pr)
 
-	if len(errors) == 0 {
-		w.WriteHeader(http.StatusOK)
-		// TODO: Set commit status to passing
-		return
-	}
-
 	owner := webhook.Repo.Owner.Name
 	repo := webhook.Repo.Name
 	num := webhook.Number
+
+	if len(errors) == 0 {
+		// Add a passing status
+		status := github.RepoStatus{}
+		*status.State = "success"
+		*status.Description = "Complexity thresholds"
+		*status.Context = "ci/threshold"
+
+		_, _, err = Client.Repositories.CreateStatus(*owner, *repo, *pr.Head.SHA, &status)
+		if err != nil {
+			// TODO
+		}
+
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 
 	b := "This PR has been judged to be too complex for the following reasons:\n\n" +
 		strings.Join(errors, "\n") +
