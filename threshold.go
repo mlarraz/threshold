@@ -52,8 +52,13 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	if len(errors) == 0 {
 		// Add a passing status
-		CreateStatus(pr, "success")
+		status, err := CreateStatus(pr, "success")
+		if err != nil {
+		}
 
+		res := fmt.Sprintf("Successfully posted status at: %s", status.URL)
+		log.Println(res)
+		w.Write([]byte(res))
 		w.WriteHeader(http.StatusOK)
 		return
 	}
@@ -73,6 +78,8 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		// TODO
 	}
 
+	var res string
+
 	if Strict {
 		// Close the PR
 		*pr.State = "closed"
@@ -82,16 +89,22 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		// Add a failing status
-		CreateStatus(pr, "failure")
+		status, err := CreateStatus(pr, "failure")
+		if err != nil {
+		}
+		res = fmt.Sprintf("Successfully posted status at: %s", status.URL)
+		log.Println(res)
 	}
 
-	w.Write([]byte("Something"))
+	w.Write([]byte(res))
 	w.WriteHeader(http.StatusOK)
 }
 
-func CreateStatus(pr *github.PullRequest, s string) {
-	if s != "failure" && s != "passing" {
-		// Handle invalid state
+func CreateStatus(pr *github.PullRequest, s string) (*github.RepoStatus, error) {
+	// Handle invalid state
+	if s != "failure" && s != "success" {
+		err := fmt.Errorf("Invalid state: %s. Valid states are \"failure\" and \"success\"", s)
+		return nil, err
 	}
 
 	status := github.RepoStatus{}
@@ -102,10 +115,8 @@ func CreateStatus(pr *github.PullRequest, s string) {
 	owner := pr.Base.User.Name
 	repo := pr.Base.Repo.Name
 
-	_, _, err := Client.Repositories.CreateStatus(*owner, *repo, *pr.Head.SHA, &status)
-	if err != nil {
-		// TODO
-	}
+	res, _, err := Client.Repositories.CreateStatus(*owner, *repo, *pr.Head.SHA, &status)
+	return res, err
 }
 
 func Evaluate(pr *github.PullRequest) (errors []string) {
