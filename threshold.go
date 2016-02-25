@@ -41,6 +41,13 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// If webhook is empty, formatting is not correct
+	if (webhook == github.PullRequestEvent{}) {
+		res = "Event is not a pull request. Ignoring"
+		code = http.StatusOK
+		return
+	}
+
 	if webhook.Action == nil || *webhook.Action == "closed" {
 		res = "Invalid PR action. Ignoring."
 		code = http.StatusOK
