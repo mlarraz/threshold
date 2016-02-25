@@ -134,7 +134,7 @@ func CreateStatus(pr *github.PullRequest, s string) (*github.RepoStatus, error) 
 		Context:     &context,
 	}
 
-	owner := pr.Base.User.Name
+	owner := pr.Base.User.Login
 	repo := pr.Base.Repo.Name
 
 	res, _, err := Client.Repositories.CreateStatus(*owner, *repo, *pr.Head.SHA, status)
