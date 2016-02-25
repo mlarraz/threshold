@@ -31,7 +31,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	var res string
 	var code int
 
-	defer HandleResponse(w, &res, &code)
+	defer handleResponse(w, &res, &code)
 
 	err := json.NewDecoder(r.Body).Decode(&webhook)
 	if err != nil {
@@ -111,7 +111,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func HandleResponse(w http.ResponseWriter, body *string, code *int) {
+func handleResponse(w http.ResponseWriter, body *string, code *int) {
 	log.Println(*body)
 
 	w.Write([]byte(*body))
