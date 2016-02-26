@@ -150,7 +150,7 @@ func CreateStatus(pr *github.PullRequest, s string) (*github.RepoStatus, error) 
 
 func Evaluate(pr *github.PullRequest) (errs []string) {
 	if MaxFiles != 0 && *pr.ChangedFiles > MaxFiles {
-		msg := fmt.Sprintf("%d files were changed, but the threshold is %d", *pr.ChangedFiles, MaxFiles)
+		msg := fmt.Sprintf("* %d files were changed, but the threshold is %d\n", *pr.ChangedFiles, MaxFiles)
 		errs = append(errs, msg)
 	}
 
