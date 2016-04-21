@@ -36,6 +36,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&webhook)
 	if err != nil {
 		res = fmt.Sprintf("Problem decoding webhook payload: %s", err)
+		log.Println(res)
 		code = http.StatusBadRequest
 
 		return
@@ -44,12 +45,14 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	// If webhook is empty, formatting is not correct
 	if (webhook == github.PullRequestEvent{}) {
 		res = "Event is not a pull request. Ignoring"
+		log.Println(res)
 		code = http.StatusOK
 		return
 	}
 
 	if webhook.Action == nil || *webhook.Action == "closed" {
 		res = "Invalid PR action. Ignoring."
+		log.Println(res)
 		code = http.StatusOK
 
 		return
@@ -67,9 +70,13 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		status, err := CreateStatus(pr, "success")
 		if err != nil {
 			res = fmt.Sprintf("%s", err)
+			log.Println(res)
+
 			code = http.StatusInternalServerError
 		} else {
 			res = fmt.Sprintf("Successfully posted status at: %s", *status.URL)
+			log.Println(res)
+
 			code = http.StatusOK
 		}
 
@@ -89,6 +96,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	_, _, err = Client.Issues.CreateComment(*owner, *repo, *num, &comment)
 	if err != nil {
 		res = fmt.Sprintf("Error posting a comment: %s", err)
+		log.Println(res)
 		code = http.StatusInternalServerError
 
 		return
@@ -100,9 +108,13 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		_, _, err = Client.PullRequests.Edit(*owner, *repo, *num, pr)
 		if err != nil {
 			res = fmt.Sprintf("Error closing PR: %s", err)
+			log.Println(res)
+
 			code = http.StatusInternalServerError
 		} else {
 			res = fmt.Sprintf("Closed PR at: %s", *pr.URL)
+			log.Println(res)
+
 			code = http.StatusOK
 		}
 	} else {
@@ -110,9 +122,13 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		status, err := CreateStatus(pr, "failure")
 		if err != nil {
 			res = fmt.Sprintf("Error updating status: %s", err)
+			log.Println(res)
+
 			code = http.StatusInternalServerError
 		} else {
 			res = fmt.Sprintf("Successfully posted status at: %s", *status.URL)
+			log.Println(res)
+
 			code = http.StatusOK
 		}
 	}
