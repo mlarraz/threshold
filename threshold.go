@@ -137,8 +137,8 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 func handleResponse(w http.ResponseWriter, body *string, code *int) {
 	log.Println(*body)
 
-	w.Write([]byte(*body))
 	w.WriteHeader(*code)
+	w.Write([]byte(*body))
 }
 
 func CreateStatus(pr *github.PullRequest, s string) (*github.RepoStatus, error) {
